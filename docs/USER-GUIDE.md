@@ -20,6 +20,8 @@ It does four things:
 
 INTENT is stateless. It reads `.intent` files and a git diff. It makes no network calls. It writes no caches. Given the same inputs, it always produces the same output.
 
+> **Still don't get it?** No worries — read **[INTENT for Humans](INTENT-FOR-HUMANS.md)**. It explains the whole thing without a single line of code.
+
 ---
 
 ## 2. 10-Minute Quickstart

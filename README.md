@@ -63,11 +63,13 @@ The agent gets the feedback. It fixes the violation. You just approve.
 ## Get started in 60 seconds
 
 ```bash
-npm install -g @intent/cli
+npm install -g github:AntoineBejarano/intent-lang
 
 intent init        # generates system.intent + policies/
 intent plan        # evaluates your current diff
 ```
+
+> **Note:** INTENT is not yet published on npm. Install directly from GitHub as shown above. This will be migrated to `@intent/cli` on npm soon.
 
 That's it. Edit `system.intent` to match your real architecture, and INTENT is enforcing from the first PR.
 
@@ -127,6 +129,7 @@ No network calls. No AI in the evaluator. No hidden state. Same inputs → same 
 
 | Document | Description |
 |---|---|
+| **[INTENT for Humans](docs/INTENT-FOR-HUMANS.md)** | Still don't get it? Read this. Zero jargon, pure clarity. |
 | **[User Guide](docs/USER-GUIDE.md)** | Complete guide: quickstart, mental model, violations, JSON output, exit codes |
 | **[AI Workflow Guide](docs/AI-WORKFLOW.md)** | Governance loop for AI agents, prompt templates, anti-thrash rules |
 | **[Formal Model](docs/AI-GUIDE.md)** | Language grammar, execution model, evaluation semantics, determinism guarantees |
