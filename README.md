@@ -1,58 +1,119 @@
-# INTENT v2.0
+# INTENT
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Spec: v2.0](https://img.shields.io/badge/Spec-v2.0-green.svg)](spec/INTENT-v2.0.md)
 
-**INTENT is a typed DSL + governance runtime that enforces architectural intent for AI-built software.**
-It turns PR diffs into typed actions, evaluates policies, and returns deterministic remediation for humans and agents.
+**The fence your AI agents can't jump.**
 
-## Why INTENT
+Cursor, Claude, Windsurf and agent swarms generate code at full speed…
+but they also destroy your architecture in silence.
 
-AI agents are powerful, but without boundaries they:
-- drift across domains,
-- introduce hidden dependencies,
-- and create ungoverned architectural entropy.
+INTENT is the governance system that prevents that.
 
-INTENT provides a formal, enforceable intent layer:
-**Humans approve. Agents execute.**
+You declare your domains, public contracts and rules **once**.
+Every PR is evaluated automatically.
+Violations are blocked or corrected with actionable suggestions.
 
-## Core Principles
+**Humans approve the intent. Agents execute within the lines.**
 
-- **Humans approve, agents execute.** Humans write the minimum intent and approve plans/changes.
-- **Stateless enforcement.** Every PR is evaluated from `*.intent + git diff (+ optional AST)` → decision.
-- **No blocking on uncertainty.** If confidence is not high: warn + require approval, don't hard-block.
-- **The runtime is the product.** The DSL is portable; enforcement + remediation + audit is the system.
+---
 
-## File Layers (3-Part Model)
+## The Problem You See Every Day
 
-1) `system.intent` — **Structural Map** (slow-moving)
-   - domains, ownership, paths
-   - public interfaces (`exposes`)
-   - dependencies (`depends_on`)
+Day 12 of the MVP. You ask the agent:
 
-2) `contracts/*.intent` — **Contracts** (versioned)
-   - semantic types (`Email`, `Money`)
-   - fields & operations
-   - stability + version
+> "When a new email arrives, generate a follow-up draft and save it."
 
-3) `policies/*.intent` — **Policies** (swappable)
-   - violations/rules
-   - severity + confidence
-   - approvals, exceptions/tags, autofix hints
+The agent opens a PR with 47 files. Among them, it does this:
 
-## What v2.0 (MVP) Does
+```ts
+// app/messaging/new-email-handler.ts
+const user = await prisma.user.findUnique({ ... });           // ← violates Identity domain
+await prisma.user.update({ lastContactedAt: new Date() });   // ← crosses domain boundary
+```
 
-- Domain boundary enforcement (paths)
-- Task scope enforcement (task domain vs. touched domains)
-- Cross-domain import warnings (optional AST)
-- Remediation as Code (JSON) for agents
-- Escape hatches + approvals
-- Modular spec (system / contracts / policy)
+- **Without INTENT:** you spend 2 hours reviewing manually or accept the tech debt.
+- **With INTENT:** the PR is blocked in 400 ms with a clear message and a fix suggestion.
 
-**Not yet:**
-- Precise DBWrite/APICall extraction
-- Full Terraform-like architecture reconciliation
-- Polyglot deep enforcement
+---
+
+## What It Looks Like in Practice
+
+```bash
+$ intent plan --pr 142
+```
+
+Actual output:
+
+```
+INTENT v2.0 • PR #142 • Acme AI CRM
+
+🚨 2 BLOCKING VIOLATIONS
+
+[ERROR] CrossDomainDirectAccess
+  File: app/messaging/new-email-handler.ts:28
+  Action: DBWrite → Database.Users
+  Actor domain: Messaging
+  Message: Messaging cannot directly touch the Users table owned by Identity
+  Suggestion: Use Identity.User.Public.updateLastContacted(userId)
+  → intent fix --pr 142 --violation 1  (auto-fix available)
+
+[WARN] UndeclaredPath
+  File: lib/utils/email-utils.ts (new)
+  → Add to paths allow in the Messaging domain
+
+Summary: 2 errors, 1 warning → Merge blocked
+Granularity: too large for a single task
+```
+
+The agent receives the feedback and regenerates correctly. You just approve.
+
+---
+
+## What INTENT Gives You
+
+- ✅ Automatic domain ownership by paths
+- ✅ Public contracts (what other domains are allowed to touch)
+- ✅ Violations with clear messages + suggestions + auto-fix
+- ✅ Fitness functions (latency, LLM cost, etc.)
+- ✅ GitHub App that runs `intent plan` on every PR
+- ✅ Full traceability for audits and compliance
+- ✅ Your agents get better instead of worse
+
+---
+
+## Install in 60 Seconds
+
+```bash
+npm install -g @intent/cli
+intent init          # scans your repo and generates 70% of the spec automatically
+intent plan --pr 142 # try it on any PR
+```
+
+Then add the GitHub App and you're done.
+
+---
+
+## Who Is This For?
+
+- **Founders** who use agents every day and don't want their codebase to become spaghetti in 3 months.
+- **Teams of 5–50 engineers** already carrying tech debt from AI-generated PRs.
+- **Regulated companies** (fintech, healthtech, B2B SaaS) that need real traceability.
+
+---
+
+## Current Status (February 2026)
+
+**v2.0 MVP — usable now:**
+
+- Domain + path enforcement
+- Public contracts
+- Actionable violations
+- `intent plan` + GitHub check
+
+**Coming next:** full AST, fitness functions in CI, visual graph.
+
+---
 
 ## Specs
 
@@ -70,15 +131,10 @@ See [`examples/`](examples/) for annotated samples:
 - [`examples/contracts/core.intent`](examples/contracts/core.intent) — contract definitions
 - [`examples/policies/default.intent`](examples/policies/default.intent) — policy rules
 
-## RFC Process
-
-> The `RFC/` directory does not exist yet. It will be created when the first RFC is submitted.
-
-Propose changes via the RFC process:
-1. Copy `RFC/INTENT-0000-template.md`
-2. Fill in the template
-3. Submit a PR titled `RFC: <title>`
+---
 
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
+
+Built with ❤️ for the agentic era.
