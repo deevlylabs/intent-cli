@@ -1,0 +1,15 @@
+intent 2.0
+
+system Deevly
+
+import "contracts/core.intent"
+import "policies/default.intent"
+
+domain Identity {
+  paths allow "app/auth/**", "lib/auth/**"
+}
+
+domain Messaging {
+  depends_on Identity
+  paths allow "app/messaging/**", "lib/messaging/**"
+}

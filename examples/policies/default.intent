@@ -1,0 +1,27 @@
+intent 2.0
+
+policy Default {
+
+  violation CrossDomainTouch confidence high {
+    when action.kind == "ModifyFile" && file.domain != null && file.domain != task.domain
+    severity error
+    message "PR touches {file.domain} but task is scoped to {task.domain}: {file.path}"
+    suggest "Split into separate PR, or tag intentional-cross-domain with approval."
+    except_when tagged "intentional-cross-domain" requires_approval "tech-lead"
+  }
+
+  violation UnknownDomainFile confidence high {
+    when action.kind == "ModifyFile" && file.domain == null
+    severity error
+    message "File {file.path} is not mapped to any domain."
+    auto_fix "Suggest best domain mapping based on nearest path."
+  }
+
+  violation CrossDomainImport confidence medium {
+    when action.kind == "ImportCrossDomain"
+    severity warn
+    message "Cross-domain import detected: {source.domain} -> {target.domain}"
+    suggest "Use public contract: {target.domain}.Public"
+    requires_approval "staff-engineer"
+  }
+}

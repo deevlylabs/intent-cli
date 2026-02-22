@@ -1,0 +1,15 @@
+intent 2.0
+
+type Email
+type Money
+
+contract User.Public v1 stability stable {
+  fields {
+    id: UUID
+    email: Email
+    name: String?
+  }
+  operations {
+    getById(id: UUID) -> User.Public
+  }
+}

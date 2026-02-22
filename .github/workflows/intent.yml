@@ -1,0 +1,87 @@
+name: INTENT v2.0-core
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Evaluate INTENT policies
+        id: intent
+        env:
+          DIFF_BASE: origin/${{ github.base_ref }}
+          DIFF_HEAD: ${{ github.sha }}
+        run: node tools/intent/plan.mjs
+        continue-on-error: true
+
+      - name: Upload intent.plan.json
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intent-plan
+          path: intent.plan.json
+          if-no-files-found: warn
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('intent.plan.json')) return;
+            const plan = JSON.parse(fs.readFileSync('intent.plan.json', 'utf-8'));
+            const icon = { pass: '✅', warn: '⚠️', blocked: '❌' }[plan.status] || '❓';
+            let body = `### ${icon} INTENT v${plan.intent_version} — **${plan.status.toUpperCase()}**\n\n`;
+            body += `**Task domain:** \`${plan.task.domain || 'unknown'}\` (source: \`${plan.task.source}\`)  \n`;
+            body += `**Files evaluated:** ${plan.actions_summary.modify_files}\n\n`;
+            if (plan.violations.length) {
+              body += '| Code | File | Severity | Confidence |\n|---|---|---|---|\n';
+              for (const v of plan.violations) {
+                body += `| \`${v.code}\` | \`${v.evidence.path}\` | ${v.severity} | ${v.confidence} |\n`;
+              }
+            } else {
+              body += '_No violations._\n';
+            }
+            const marker = '<!-- intent-plan -->';
+            body = marker + '\n' + body;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Enforce result
+        if: steps.intent.outcome == 'failure'
+        run: |
+          echo "::error::INTENT evaluation returned status=blocked"
+          exit 1
