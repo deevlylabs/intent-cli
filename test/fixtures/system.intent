@@ -1,0 +1,19 @@
+intent 2.0
+
+system TestApp
+
+import "contracts/core.intent"
+import "policies/default.intent"
+
+domain Identity {
+  paths allow "app/auth/**", "lib/auth/**"
+}
+
+domain Messaging {
+  depends_on Identity
+  paths allow "app/messaging/**", "lib/messaging/**"
+}
+
+domain Billing {
+  paths allow "app/billing/**", "lib/billing/**"
+}

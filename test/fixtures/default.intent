@@ -14,7 +14,7 @@ policy Default {
     when action.kind == "ModifyFile" && file.domain == null
     severity error
     message "File {file.path} is not mapped to any domain."
-    auto_fix "Suggest best domain mapping based on nearest path."
+    suggest "Map this file to a domain in system.intent via paths allow."
   }
 
   violation CrossDomainImport confidence medium {

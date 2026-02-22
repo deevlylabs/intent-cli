@@ -1,0 +1,7 @@
+node_modules/
+intent.plan.json
+coverage/
+dist/
+.DS_Store
+.intent-cache/
+*.tgz

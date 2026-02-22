@@ -9,8 +9,24 @@ permissions:
   pull-requests: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
   evaluate:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,12 +36,12 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Evaluate INTENT policies
         id: intent
-        env:
-          DIFF_BASE: origin/${{ github.base_ref }}
-          DIFF_HEAD: ${{ github.sha }}
-        run: node tools/intent/plan.mjs
+        run: node src/cli/index.mjs plan --base "origin/${{ github.base_ref }}" --head "${{ github.sha }}"
         continue-on-error: true
 
       - name: Upload intent.plan.json

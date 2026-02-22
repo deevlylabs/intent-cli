@@ -1,0 +1,42 @@
+{
+  "name": "@intent/cli",
+  "version": "2.0.0",
+  "description": "The fence your AI agents can't jump — architectural governance for the agentic era",
+  "type": "module",
+  "bin": {
+    "intent": "./src/cli/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "intent:dev": "node src/cli/index.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "intent",
+    "governance",
+    "architecture",
+    "ai-agents",
+    "cli",
+    "domain-driven-design"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DeevlyLabs/intent-lang.git"
+  },
+  "dependencies": {
+    "chalk": "^5.4.0",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}

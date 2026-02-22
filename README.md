@@ -1,135 +1,168 @@
-# INTENT
+<p align="center">
+  <img src="public/images/logo_text.png" alt="INTENT" width="480">
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Spec: v2.0](https://img.shields.io/badge/Spec-v2.0-green.svg)](spec/INTENT-v2.0.md)
+<p align="center">
+  <strong>Architectural governance for modern codebases.</strong><br>
+  A declarative DSL for modeling architectural domains and policies.<br>
+  Deterministic. Stateless. PR-time enforcement.
+</p>
 
-**The fence your AI agents can't jump.**
-
-Cursor, Claude, Windsurf and agent swarms generate code at full speed…
-but they also destroy your architecture in silence.
-
-INTENT is the governance system that prevents that.
-
-You declare your domains, public contracts and rules **once**.
-Every PR is evaluated automatically.
-Violations are blocked or corrected with actionable suggestions.
-
-**Humans approve the intent. Agents execute within the lines.**
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Version-2.0.0-green.svg" alt="Version 2.0.0"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933.svg" alt="Node >= 18"></a>
+</p>
 
 ---
 
-## The Problem You See Every Day
+## The problem
 
-Day 12 of the MVP. You ask the agent:
+AI agents write code faster than any human. They also break your architecture faster than any human.
 
-> "When a new email arrives, generate a follow-up draft and save it."
+A single agent-generated PR can touch 40 files across 5 domains. It imports directly from modules it shouldn't know about. It updates database tables owned by another team. It does all of this while producing code that *works* — and that's what makes it dangerous.
 
-The agent opens a PR with 47 files. Among them, it does this:
+By the time you notice, the damage is spread across dozens of merged PRs. Refactoring costs weeks. The architecture diagram no longer matches reality.
 
-```ts
-// app/messaging/new-email-handler.ts
-const user = await prisma.user.findUnique({ ... });           // ← violates Identity domain
-await prisma.user.update({ lastContactedAt: new Date() });   // ← crosses domain boundary
+## The solution
+
+**INTENT** is a lightweight DSL and CLI that enforces architectural domain boundaries on every pull request.
+
+You declare your rules once:
+
+```
+domain Identity {
+  paths allow "src/auth/**", "lib/auth/**"
+}
+
+domain Billing {
+  paths allow "src/billing/**"
+}
 ```
 
-- **Without INTENT:** you spend 2 hours reviewing manually or accept the tech debt.
-- **With INTENT:** the PR is blocked in 400 ms with a clear message and a fix suggestion.
+Every diff is evaluated automatically. Cross-domain violations are blocked before merge — with clear messages and fix suggestions.
+
+```
+▲ INTENT v2.0 • MyApp • scope: Identity (cli_override) • 4 files
+
+  🚨 1 BLOCKING VIOLATION
+
+  ✖ [CrossDomainTouch] src/billing/invoice.ts:28
+    PR touches Billing but task is scoped to Identity: src/billing/invoice.ts
+    → Split into separate PR, or tag intentional-cross-domain with approval.
+
+────────────────────────────────────────────────────────────
+  BLOCKED  1 error
+────────────────────────────────────────────────────────────
+```
+
+The agent gets the feedback. It fixes the violation. You just approve.
 
 ---
 
-## What It Looks Like in Practice
-
-```bash
-$ intent plan --pr 142
-```
-
-Actual output:
-
-```
-INTENT v2.0 • PR #142 • Acme AI CRM
-
-🚨 2 BLOCKING VIOLATIONS
-
-[ERROR] CrossDomainDirectAccess
-  File: app/messaging/new-email-handler.ts:28
-  Action: DBWrite → Database.Users
-  Actor domain: Messaging
-  Message: Messaging cannot directly touch the Users table owned by Identity
-  Suggestion: Use Identity.User.Public.updateLastContacted(userId)
-  → intent fix --pr 142 --violation 1  (auto-fix available)
-
-[WARN] UndeclaredPath
-  File: lib/utils/email-utils.ts (new)
-  → Add to paths allow in the Messaging domain
-
-Summary: 2 errors, 1 warning → Merge blocked
-Granularity: too large for a single task
-```
-
-The agent receives the feedback and regenerates correctly. You just approve.
-
----
-
-## What INTENT Gives You
-
-- ✅ Automatic domain ownership by paths
-- ✅ Public contracts (what other domains are allowed to touch)
-- ✅ Violations with clear messages + suggestions + auto-fix
-- ✅ Fitness functions (latency, LLM cost, etc.)
-- ✅ GitHub App that runs `intent plan` on every PR
-- ✅ Full traceability for audits and compliance
-- ✅ Your agents get better instead of worse
-
----
-
-## Install in 60 Seconds
+## Get started in 60 seconds
 
 ```bash
 npm install -g @intent/cli
-intent init          # scans your repo and generates 70% of the spec automatically
-intent plan --pr 142 # try it on any PR
+
+intent init        # generates system.intent + policies/
+intent plan        # evaluates your current diff
 ```
 
-Then add the GitHub App and you're done.
+That's it. Edit `system.intent` to match your real architecture, and INTENT is enforcing from the first PR.
 
 ---
 
-## Who Is This For?
+## Why INTENT
 
-- **Founders** who use agents every day and don't want their codebase to become spaghetti in 3 months.
-- **Teams of 5–50 engineers** already carrying tech debt from AI-generated PRs.
-- **Regulated companies** (fintech, healthtech, B2B SaaS) that need real traceability.
-
----
-
-## Current Status (February 2026)
-
-**v2.0 MVP — usable now:**
-
-- Domain + path enforcement
-- Public contracts
-- Actionable violations
-- `intent plan` + GitHub check
-
-**Coming next:** full AST, fitness functions in CI, visual graph.
+| Without INTENT | With INTENT |
+|---|---|
+| Architecture enforced socially (reviews, conventions) | Architecture enforced deterministically (DSL + CLI) |
+| Manual review for domain boundary compliance | Automated evaluation on every PR |
+| Implicit domain boundaries, undocumented | Explicit domain declarations, version-controlled |
+| Drift accumulates silently across merged PRs | Violations blocked before merge |
 
 ---
 
-## Specs
+## Built for AI workflows
 
-| Document | Path |
+INTENT works for any team, but it shines when AI agents are generating code. Agents optimize locally and break boundaries silently — INTENT catches it before merge.
+
+The governance loop is automatic:
+
+1. Agent generates code → opens PR
+2. `intent plan --json` evaluates the diff
+3. Blocked? → agent reads `intent.plan.json`, fixes violations, re-runs
+4. Pass? → merge
+
+No manual architectural policing required. The agent stays inside the lines.
+
+**[Read the full AI workflow guide →](docs/AI-WORKFLOW.md)**
+
+---
+
+## How it works
+
+INTENT evaluates diffs through a deterministic pipeline:
+
+1. **Load** `system.intent` (domains + paths) and `policies/*.intent` (rules)
+2. **Diff** — extract changed files from `git diff`
+3. **Map** — resolve each file to its owning domain
+4. **Evaluate** — check every rule against every changed file
+5. **Report** — emit `intent.plan.json` + human-readable report
+
+No network calls. No AI in the evaluator. No hidden state. Same inputs → same output, every time.
+
+---
+
+## Who is this for
+
+- **AI-heavy teams** shipping fast with Cursor, Claude, Copilot or agent swarms — who need their codebase to stay clean without slowing down.
+- **Growing engineering orgs (5–50+)** where implicit conventions no longer scale and domain boundaries need to be enforced, not just documented.
+- **Regulated environments** (fintech, healthtech, B2B SaaS) that need auditable, deterministic proof that architectural boundaries are respected.
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| **[User Guide](docs/USER-GUIDE.md)** | Complete guide: quickstart, mental model, violations, JSON output, exit codes |
+| **[AI Workflow Guide](docs/AI-WORKFLOW.md)** | Governance loop for AI agents, prompt templates, anti-thrash rules |
+| **[Formal Model](docs/AI-GUIDE.md)** | Language grammar, execution model, evaluation semantics, determinism guarantees |
+
+### Specifications
+
+| Spec | Path |
 |---|---|
 | Core specification | [`spec/INTENT-v2.0.md`](spec/INTENT-v2.0.md) |
 | Output schema | [`spec/PLAN-JSON.md`](spec/PLAN-JSON.md) |
 | Action model | [`spec/ACTION-LOG.md`](spec/ACTION-LOG.md) |
 | Compliance levels | [`spec/COMPLIANCE-LEVELS.md`](spec/COMPLIANCE-LEVELS.md) |
 
-## Examples
+### Examples
 
-See [`examples/`](examples/) for annotated samples:
-- [`examples/system.intent`](examples/system.intent) — structural map
-- [`examples/contracts/core.intent`](examples/contracts/core.intent) — contract definitions
-- [`examples/policies/default.intent`](examples/policies/default.intent) — policy rules
+| Example | Path |
+|---|---|
+| Structural map | [`examples/system.intent`](examples/system.intent) |
+| Policy rules | [`examples/policies/default.intent`](examples/policies/default.intent) |
+
+---
+
+## CLI at a glance
+
+```bash
+intent init                  # scaffold system.intent + policies/
+intent plan --scope Billing  # evaluate diff against rules
+intent fix --dry-run         # preview auto-fixes
+intent plan --json           # machine-readable output for CI/agents
+```
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Pass or warn — safe to merge |
+| `1` | Blocked — violations must be fixed |
+| `2` | Engine error |
 
 ---
 
@@ -137,4 +170,6 @@ See [`examples/`](examples/) for annotated samples:
 
 MIT — see [`LICENSE`](LICENSE).
 
-Built with ❤️ for the agentic era.
+Copyright (c) 2026 [DeevlyLabs](https://github.com/DeevlyLabs)
+
+<p align="center"><sub>Created for the age of AI — with ❤️</sub></p>
