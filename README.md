@@ -63,7 +63,7 @@ The agent gets the feedback. It fixes the violation. You just approve.
 ## Get started in 60 seconds
 
 ```bash
-npm install -g github:AntoineBejarano/intent-lang
+npm install -g github:deevlylabs/intent-cli
 
 intent init        # generates system.intent + policies/
 intent plan        # evaluates your current diff
